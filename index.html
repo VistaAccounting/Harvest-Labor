@@ -828,6 +828,7 @@ function renderBudget() {
    the upload zone hidden, so render on page load.
 ───────────────────────────────────────────── */
 (function init() {
+  document.getElementById('variety-toggle').style.display = hasVarietyData() ? '' : 'none';
   populateFilters();
   updateKPIs();
   render();
