@@ -288,7 +288,7 @@
     <div class="toggle-group" id="view-group">
       <button class="toggle-btn active" data-view="day">Day</button>
       <button class="toggle-btn" data-view="crew">Crew</button>
-      <button class="toggle-btn" data-view="packstyle">Pack style</button>
+      <button class="toggle-btn" data-view="packsize">Pack size</button>
       <button class="toggle-btn" data-view="variety" id="variety-toggle" style="display:none">Variety</button>
     </div>
     <span class="ctrl-label" style="margin-left:6px">Metric:</span>
@@ -334,6 +334,7 @@
       <div class="toggle-group" id="crew-detail-sort-group">
         <button class="toggle-btn active" data-sort="date">Sort by date</button>
         <button class="toggle-btn" data-sort="crew">Sort by crew</button>
+        <button class="toggle-btn" data-sort="variety" id="crew-detail-variety-sort" style="display:none">Sort by variety</button>
       </div>
     </div>
     <div class="table-wrap">
@@ -382,7 +383,7 @@ const DEFAULT_BUDGET = [
 ];
 let BUDGET = DEFAULT_BUDGET;
 let PAY_IS_ESTIMATED = false;
-const DEFAULT_DATA = [{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP VISTA CARTON; HP VISTA STYRO","variety":"Honey Pops","hc":60,"cpp":7.48,"date":"6/18/2026","pay":10184.32,"pieces":1361},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA; HP VISTA STYRO","variety":"Honey Pops","hc":48,"cpp":2.04,"date":"6/18/2026","pay":8168.84,"pieces":4012},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS; HP VISTA STYRO","variety":"Honey Pops","hc":60,"cpp":1.77,"date":"6/18/2026","pay":10405.13,"pieces":5872},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.63,"date":"6/19/2026","pay":8142.29,"pieces":5004},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.64,"date":"6/19/2026","pay":8297.49,"pieces":5052},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.65,"date":"6/22/2026","pay":11847.55,"pieces":7192},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":57,"cpp":1.67,"date":"6/22/2026","pay":11430.83,"pieces":6836},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"HP VISTA CARTON","variety":"Candy Snaps","hc":60,"cpp":2.23,"date":"6/23/2026","pay":11635.93,"pieces":5228},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; HP 6/3# Costco USA","variety":"Candy Snaps","hc":55,"cpp":2.51,"date":"6/23/2026","pay":10599.7,"pieces":4228},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; HP 6/3# Costco USA","variety":"Candy Snaps","hc":48,"cpp":9.38,"date":"6/23/2026","pay":9328.42,"pieces":994},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP 6/3# SAMS; HP VISTA MXG","variety":"Honey Pops","hc":58,"cpp":1.61,"date":"6/23/2026","pay":11579.72,"pieces":7176},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":51,"cpp":1.77,"date":"6/23/2026","pay":10123.02,"pieces":5704},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# COSTCO TW; HP 6/3# Costco USA; HP 6/3# SAMS; HP VISTA MXG","variety":"Honey Pops","hc":59,"cpp":1.81,"date":"6/23/2026","pay":11683.37,"pieces":6464},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":56,"cpp":9.16,"date":"6/24/2026","pay":10888.19,"pieces":1189},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON; HP VISTA CARTON","variety":"Candy Snaps","hc":59,"cpp":8.31,"date":"6/24/2026","pay":11544.5,"pieces":1389},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":52,"cpp":8.57,"date":"6/24/2026","pay":10170.02,"pieces":1187},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7; 704 - 8,9","packStyle":"HP 6/3# COSTCO TW; HP 6/3# SAMS","variety":"Honey Pops","hc":60,"cpp":6.57,"date":"6/24/2026","pay":11978.49,"pieces":1824},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA","variety":"Honey Pops","hc":56,"cpp":6.78,"date":"6/24/2026","pay":11221.08,"pieces":1654},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA; HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":9.03,"date":"6/24/2026","pay":11699.31,"pieces":1295},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":62,"cpp":7.1,"date":"6/25/2026","pay":12326.86,"pieces":1735},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":52,"cpp":7.62,"date":"6/25/2026","pay":10288.71,"pieces":1351},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS NEON HARVEST STYRO","variety":"Candy Snaps","hc":55,"cpp":8.23,"date":"6/25/2026","pay":10759.07,"pieces":1307},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":60,"cpp":6.23,"date":"6/25/2026","pay":9069.28,"pieces":1455},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 8,9","packStyle":"GREEN 6/3# WELCH; HP 6/3# Costco USA","variety":"Honey Pops","hc":55,"cpp":6.34,"date":"6/25/2026","pay":8317.78,"pieces":1312},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":7.41,"date":"6/25/2026","pay":8773.47,"pieces":1184},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":48,"cpp":12.05,"date":"6/25/2026","pay":9098.14,"pieces":755},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":51,"cpp":11.82,"date":"6/25/2026","pay":9609.93,"pieces":813},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":63,"cpp":9.13,"date":"6/26/2026","pay":12214.8,"pieces":1338},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":61,"cpp":9.2,"date":"6/26/2026","pay":11531.87,"pieces":1253},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":10.76,"date":"6/26/2026","pay":9995.92,"pieces":929},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; CS NEON HARVEST STYRO","variety":"Candy Snaps","hc":55,"cpp":8.69,"date":"6/26/2026","pay":10716.91,"pieces":1233},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":53,"cpp":9.07,"date":"6/26/2026","pay":10308.41,"pieces":1137},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":56,"cpp":6.81,"date":"6/26/2026","pay":8367.02,"pieces":1228},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":45,"cpp":11.66,"date":"6/26/2026","pay":8601.43,"pieces":738},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":50,"cpp":9.82,"date":"6/26/2026","pay":9656.59,"pieces":983},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":64,"cpp":9.54,"date":"6/26/2026","pay":12033.75,"pieces":1261},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":63,"cpp":6.75,"date":"6/29/2026","pay":12595.9,"pieces":1866},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":61,"cpp":7.51,"date":"6/29/2026","pay":12046.21,"pieces":1603},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":8.92,"date":"6/29/2026","pay":11070.61,"pieces":1241},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":59,"cpp":8.77,"date":"6/29/2026","pay":11418.67,"pieces":1302},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":9.45,"date":"6/29/2026","pay":10917.87,"pieces":1155},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 1n","packStyle":"Generic RED CLEAR CARTON","variety":"Sugra57","hc":57,"cpp":8.83,"date":"6/29/2026","pay":11061.41,"pieces":1252},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":50,"cpp":9.19,"date":"6/29/2026","pay":9709.39,"pieces":1056},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":53,"cpp":9.45,"date":"6/29/2026","pay":10244.34,"pieces":1084},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":67,"cpp":9.06,"date":"6/29/2026","pay":12966.37,"pieces":1431}];
+const DEFAULT_DATA = [{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packSize":"19# BX; 19# ST","variety":"Honey Pops","hc":60,"cpp":7.48,"date":"06/18/2026","pay":10184.32,"pieces":1361},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packSize":"19# ST; 6/3#","variety":"Honey Pops","hc":48,"cpp":2.04,"date":"06/18/2026","pay":8168.84,"pieces":4012},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packSize":"19# ST; 6/3#","variety":"Honey Pops","hc":60,"cpp":1.77,"date":"06/18/2026","pay":10405.13,"pieces":5872},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packSize":"6/3#","variety":"Honey Pops","hc":59,"cpp":1.63,"date":"06/19/2026","pay":8142.29,"pieces":5004},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":59,"cpp":1.64,"date":"06/19/2026","pay":8297.49,"pieces":5052},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packSize":"6/3#","variety":"Honey Pops","hc":59,"cpp":1.65,"date":"06/22/2026","pay":11847.55,"pieces":7192},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packSize":"6/3#","variety":"Honey Pops","hc":57,"cpp":1.67,"date":"06/22/2026","pay":11430.83,"pieces":6836},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packSize":"19# BX","variety":"Candy Snaps","hc":60,"cpp":2.23,"date":"06/23/2026","pay":11635.93,"pieces":5228},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":55,"cpp":2.51,"date":"06/23/2026","pay":10599.7,"pieces":4228},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":48,"cpp":9.38,"date":"06/23/2026","pay":9328.42,"pieces":994},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packSize":"19# MXG; 6/3#","variety":"Honey Pops","hc":58,"cpp":1.61,"date":"06/23/2026","pay":11579.72,"pieces":7176},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":51,"cpp":1.77,"date":"06/23/2026","pay":10123.02,"pieces":5704},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packSize":"19# MXG; 6/3#","variety":"Honey Pops","hc":59,"cpp":1.81,"date":"06/23/2026","pay":11683.37,"pieces":6464},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":56,"cpp":9.16,"date":"06/24/2026","pay":10888.19,"pieces":1189},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packSize":"19# BX","variety":"Candy Snaps","hc":59,"cpp":8.31,"date":"06/24/2026","pay":11544.5,"pieces":1389},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":52,"cpp":8.57,"date":"06/24/2026","pay":10170.02,"pieces":1187},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7; 704 - 8,9","packSize":"6/3#","variety":"Honey Pops","hc":60,"cpp":6.57,"date":"06/24/2026","pay":11978.49,"pieces":1824},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":56,"cpp":6.78,"date":"06/24/2026","pay":11221.08,"pieces":1654},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":59,"cpp":9.03,"date":"06/24/2026","pay":11699.31,"pieces":1295},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packSize":"19# BX","variety":"Candy Snaps","hc":62,"cpp":7.11,"date":"06/25/2026","pay":12331.23,"pieces":1735},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":52,"cpp":7.62,"date":"06/25/2026","pay":10288.71,"pieces":1351},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packSize":"19# ST","variety":"Candy Snaps","hc":55,"cpp":8.23,"date":"06/25/2026","pay":10759.07,"pieces":1307},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":60,"cpp":6.23,"date":"06/25/2026","pay":9069.76,"pieces":1455},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 8,9","packSize":"6/3#","variety":"Honey Pops","hc":55,"cpp":6.34,"date":"06/25/2026","pay":8317.78,"pieces":1312},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":59,"cpp":7.41,"date":"06/25/2026","pay":8773.47,"pieces":1184},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":48,"cpp":12.06,"date":"06/25/2026","pay":9101.56,"pieces":755},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":51,"cpp":11.82,"date":"06/25/2026","pay":9609.93,"pieces":813},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":63,"cpp":9.13,"date":"06/26/2026","pay":12219.3,"pieces":1338},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":61,"cpp":9.2,"date":"06/26/2026","pay":11532.72,"pieces":1253},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":57,"cpp":10.76,"date":"06/26/2026","pay":9995.92,"pieces":929},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packSize":"19# ST; 6/3#","variety":"Candy Snaps","hc":55,"cpp":8.69,"date":"06/26/2026","pay":10716.91,"pieces":1233},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":53,"cpp":9.07,"date":"06/26/2026","pay":10308.41,"pieces":1137},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packSize":"6/3#","variety":"Honey Pops","hc":56,"cpp":6.81,"date":"06/26/2026","pay":8367.02,"pieces":1228},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":45,"cpp":11.66,"date":"06/26/2026","pay":8601.43,"pieces":738},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":50,"cpp":9.83,"date":"06/26/2026","pay":9660.32,"pieces":983},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":64,"cpp":9.54,"date":"06/26/2026","pay":12033.75,"pieces":1261},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"801 - 1,2,3n,7","packSize":"19# MXG","variety":"Jack's Salute","hc":7,"cpp":11.41,"date":"06/26/2026","pay":958.74,"pieces":84},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packSize":"19# BX","variety":"Candy Snaps","hc":63,"cpp":6.75,"date":"06/29/2026","pay":12601.69,"pieces":1866},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packSize":"19# BX","variety":"Candy Snaps","hc":61,"cpp":7.52,"date":"06/29/2026","pay":12055.52,"pieces":1603},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":57,"cpp":8.93,"date":"06/29/2026","pay":11078.09,"pieces":1241},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":59,"cpp":8.77,"date":"06/29/2026","pay":11419.65,"pieces":1302},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packSize":"6/3#","variety":"Candy Snaps","hc":57,"cpp":9.46,"date":"06/29/2026","pay":10925.4,"pieces":1155},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 1n","packSize":"19# BX","variety":"Sugra57","hc":57,"cpp":8.84,"date":"06/29/2026","pay":11065.29,"pieces":1252},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":50,"cpp":9.2,"date":"06/29/2026","pay":9713.86,"pieces":1056},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":53,"cpp":9.45,"date":"06/29/2026","pay":10247.89,"pieces":1084},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packSize":"6/3#","variety":"Candy Snaps","hc":67,"cpp":9.06,"date":"06/29/2026","pay":12969.95,"pieces":1431}];
 let DATA = DEFAULT_DATA;
 let currentView = 'day';
 let currentMetric = 'cpp';
@@ -401,7 +402,7 @@ function matchHarvestField(h) {
   if (h === 'employer') return 'employer';
   if (h === 'crew') return 'crew';
   if (h === 'location') return 'location';
-  if (h.includes('pack') && h.includes('style')) return 'packStyle';
+  if (h.includes('pack') && h.includes('size')) return 'packSize';
   if (h.includes('variety')) return 'variety';
   if (h.includes('head') && h.includes('count')) return 'hc';
   if ((h.includes('cost') && h.includes('piece')) || h === 'cpp') return 'cpp';
@@ -435,7 +436,7 @@ function parseHarvestCSV(text) {
 
     const hasPayCol = colMap.includes('pay');
 
-    const row = { employer, crew:'', location:'', packStyle:'', variety:'', hc:0, cpp:0, date:'', pay:0, pieces:0 };
+    const row = { employer, crew:'', location:'', packSize:'', variety:'', hc:0, cpp:0, date:'', pay:0, pieces:0 };
     colMap.forEach((field, i) => {
       if (!field || field === 'employer') return;
       const raw = (cols[i] || '').trim();
@@ -499,9 +500,14 @@ document.getElementById('csv-input').addEventListener('change', function(e) {
     DATA = parseHarvestCSV(ev.target.result);
     document.getElementById('csv-status').textContent = file.name + ' — ' + DATA.length + ' rows loaded';
     document.getElementById('variety-toggle').style.display = hasVarietyData() ? '' : 'none';
+    document.getElementById('crew-detail-variety-sort').style.display = hasVarietyData() ? '' : 'none';
     if (currentView === 'variety' && !hasVarietyData()) {
       currentView = 'day';
       document.querySelectorAll('#view-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'day'));
+    }
+    if (crewDetailSort === 'variety' && !hasVarietyData()) {
+      crewDetailSort = 'date';
+      document.querySelectorAll('#crew-detail-sort-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === 'date'));
     }
     populateFilters();
     updateKPIs();
@@ -629,13 +635,13 @@ function fmtVal(v, m) {
   return '$' + Math.round(v).toLocaleString();
 }
 
-const PACK_SHORT = s => {
+const SIZE_SHORT = s => {
   if (!s || s.length <= 22) return s;
   const parts = s.split(';');
   return parts[0].trim() + (parts.length > 1 ? ' +' + (parts.length-1) : '');
 };
 
-const keyField = () => currentView === 'day' ? 'date' : currentView === 'crew' ? 'crew' : currentView === 'variety' ? 'variety' : 'packStyle';
+const keyField = () => currentView === 'day' ? 'date' : currentView === 'crew' ? 'crew' : currentView === 'variety' ? 'variety' : 'packSize';
 
 /* ─────────────────────────────────────────────
    RENDER — chart + table
@@ -648,11 +654,11 @@ function render() {
   const vals = keys.map(k => parseFloat(metricVal(grouped[k], currentMetric).toFixed(2)));
   const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
 
-  const viewLabel = {day:'by day', crew:'by crew', packstyle:'by pack style', variety:'by variety'}[currentView];
+  const viewLabel = {day:'by day', crew:'by crew', packsize:'by pack size', variety:'by variety'}[currentView];
   document.getElementById('chart-title').textContent = metricLabel(currentMetric) + ' ' + viewLabel;
   document.getElementById('avg-label').textContent = 'Period avg: ' + fmtVal(avg, currentMetric);
 
-  const displayKeys = currentView === 'packstyle' ? keys.map(PACK_SHORT) : keys;
+  const displayKeys = currentView === 'packsize' ? keys.map(SIZE_SHORT) : keys;
 
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
   const gridColor = isDark ? '#2c2c2a' : '#e1e0d9';
@@ -723,7 +729,7 @@ function render() {
 ───────────────────────────────────────────── */
 function renderTable(data, grouped, keys) {
   const kf = keyField();
-  const colLabel = currentView === 'day' ? 'Date' : currentView === 'crew' ? 'Crew' : currentView === 'variety' ? 'Variety' : 'Pack style';
+  const colLabel = currentView === 'day' ? 'Date' : currentView === 'crew' ? 'Crew' : currentView === 'variety' ? 'Variety' : 'Pack size';
   const showLocation = currentView === 'day';
 
   document.getElementById('thead').innerHTML = `<tr>
@@ -742,7 +748,7 @@ function renderTable(data, grouped, keys) {
     const cpp = g.totalPieces > 0 ? (g.totalPay/g.totalPieces).toFixed(2) : '—';
     const rowData = data.filter(r => r[kf] === k);
     const locations = [...new Set(rowData.map(r => r.location))].join(', ');
-    const label = currentView === 'packstyle' ? PACK_SHORT(k) : k;
+    const label = currentView === 'packsize' ? SIZE_SHORT(k) : k;
     const sub = currentView === 'crew'
       ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">${[...new Set(rowData.map(r=>r.employer))].join(', ')}</div>`
       : '';
@@ -788,6 +794,9 @@ function renderCrewDetail() {
     if (crewDetailSort === 'crew') {
       return a.crew.localeCompare(b.crew) || a.date.localeCompare(b.date);
     }
+    if (crewDetailSort === 'variety') {
+      return (a.variety || '').localeCompare(b.variety || '') || a.date.localeCompare(b.date);
+    }
     return a.date.localeCompare(b.date) || a.crew.localeCompare(b.crew);
   });
 
@@ -796,7 +805,7 @@ function renderCrewDetail() {
     <th>Crew</th>
     <th>Employer</th>
     ${showVariety ? '<th>Variety</th>' : ''}
-    <th>Pack style</th>
+    <th>Pack size</th>
     <th>Location</th>
     <th class="num">Head count</th>
     <th class="num">Pieces</th>
@@ -810,7 +819,7 @@ function renderCrewDetail() {
       <td>${r.crew}</td>
       <td>${r.employer}</td>
       ${showVariety ? `<td>${r.variety || '—'}</td>` : ''}
-      <td><span title="${r.packStyle}">${PACK_SHORT(r.packStyle)}</span></td>
+      <td><span title="${r.packSize}">${SIZE_SHORT(r.packSize)}</span></td>
       <td>${r.location}</td>
       <td class="num">${r.hc}</td>
       <td class="num">${r.pieces.toLocaleString()}</td>
@@ -903,6 +912,7 @@ function renderBudget() {
 ───────────────────────────────────────────── */
 (function init() {
   document.getElementById('variety-toggle').style.display = hasVarietyData() ? '' : 'none';
+  document.getElementById('crew-detail-variety-sort').style.display = hasVarietyData() ? '' : 'none';
   populateFilters();
   updateKPIs();
   render();
