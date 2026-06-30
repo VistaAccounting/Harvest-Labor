@@ -297,8 +297,12 @@
       <button class="toggle-btn" data-metric="pieces">Pieces</button>
       <button class="toggle-btn" data-metric="pay">Gross pay</button>
     </div>
+    <span class="ctrl-label" style="margin-left:6px">Location:</span>
     <select id="location-filter"><option value="All">All locations</option></select>
+    <span class="ctrl-label">Employer:</span>
     <select id="employer-filter"><option value="All">All employers</option></select>
+    <span class="ctrl-label" id="variety-filter-label" style="display:none">Variety:</span>
+    <select id="variety-filter" style="display:none"><option value="All">All varieties</option></select>
   </div>
 
   <!-- Main chart -->
@@ -544,12 +548,25 @@ function populateFilters() {
   const employers = ['All', ...[...new Set(DATA.map(r => r.employer))].sort()];
   const lf = document.getElementById('location-filter');
   const ef = document.getElementById('employer-filter');
-  lf.innerHTML = locations.map(s => `<option value="${s}">${s}</option>`).join('');
-  ef.innerHTML = employers.map(e => `<option value="${e}">${e}</option>`).join('');
+  lf.innerHTML = locations.map(s => `<option value="${s}">${s === 'All' ? 'All locations' : s}</option>`).join('');
+  ef.innerHTML = employers.map(e => `<option value="${e}">${e === 'All' ? 'All employers' : e}</option>`).join('');
+
+  const vf = document.getElementById('variety-filter');
+  const vfLabel = document.getElementById('variety-filter-label');
+  if (hasVarietyData()) {
+    const varieties = ['All', ...[...new Set(DATA.map(r => r.variety).filter(Boolean))].sort()];
+    vf.innerHTML = varieties.map(v => `<option value="${v}">${v === 'All' ? 'All varieties' : v}</option>`).join('');
+    vf.style.display = '';
+    vfLabel.style.display = '';
+  } else {
+    vf.style.display = 'none';
+    vfLabel.style.display = 'none';
+  }
 }
 
 document.getElementById('location-filter').addEventListener('change', () => { updateKPIs(); render(); });
 document.getElementById('employer-filter').addEventListener('change', () => { updateKPIs(); render(); });
+document.getElementById('variety-filter').addEventListener('change', () => { updateKPIs(); render(); });
 
 document.getElementById('crew-detail-sort-group').addEventListener('click', e => {
   const btn = e.target.closest('[data-sort]');
@@ -563,8 +580,10 @@ function getFiltered() {
   let d = DATA;
   const location = document.getElementById('location-filter').value;
   const employer = document.getElementById('employer-filter').value;
+  const variety = document.getElementById('variety-filter').value;
   if (location !== 'All') d = d.filter(r => r.location === location);
   if (employer !== 'All') d = d.filter(r => r.employer === employer);
+  if (variety && variety !== 'All') d = d.filter(r => r.variety === variety);
   return d;
 }
 
