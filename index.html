@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista Vineyards — Harvest Labor · Packout Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    :root {
+      --vv-burgundy: #3A1019;
+      --vv-moss: #504A1D;
+      --vv-burgundy-mid: #6b2030;
+      --vv-moss-mid: #7a7030;
+      --vv-burgundy-pale: #f5eaec;
+      --vv-moss-pale: #f0efdf;
+      --surface-0: #f7f6f3;
+      --surface-1: #f2f1ed;
+      --surface-2: #ffffff;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --border: rgba(11,11,11,0.10);
+      --border-strong: rgba(11,11,11,0.18);
+      --radius: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface-0: #111110;
+        --surface-1: #1a1a19;
+        --surface-2: #232321;
+        --text-primary: #ffffff;
+        --text-secondary: #c3c2b7;
+        --text-muted: #898781;
+        --border: rgba(255,255,255,0.10);
+        --border-strong: rgba(255,255,255,0.18);
+        --vv-burgundy-pale: #2a0e16;
+        --vv-moss-pale: #1e1d0a;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--surface-0);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .dash { max-width: 1100px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .hdr {
+      background: var(--vv-burgundy);
+      color: #fff;
+      padding: 1.1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .hdr-title { font-size: 16px; font-weight: 500; letter-spacing: 0.02em; }
+    .hdr-sub { font-size: 12px; opacity: 0.6; margin-top: 3px; }
+    .hdr-right { font-size: 11px; opacity: 0.5; text-align: right; line-height: 1.5; }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 1.5px dashed var(--vv-moss-mid);
+      border-radius: 12px;
+      background: var(--vv-moss-pale);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .upload-zone label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--vv-moss);
+      cursor: pointer;
+    }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-btn {
+      background: var(--vv-moss);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 7px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .upload-btn:hover { background: var(--vv-moss-mid); }
+    .upload-status { font-size: 12px; color: var(--text-muted); }
+
+    /* ── KPI row ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 1.25rem;
+    }
+    .kpi {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+    }
+    .kpi-b { border-left: 3px solid var(--vv-burgundy); }
+    .kpi-m { border-left: 3px solid var(--vv-moss); }
+    .kpi-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+    .kpi-val { font-size: 22px; font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .ctrl-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .toggle-group {
+      display: flex;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .toggle-btn {
+      font-size: 12px;
+      padding: 5px 14px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: inherit;
+      transition: background 0.12s;
+      white-space: nowrap;
+    }
+    .toggle-btn:hover { background: var(--surface-1); }
+    .toggle-btn.active { background: var(--vv-burgundy); color: #fff; }
+    select {
+      font-size: 12px;
+      padding: 5px 10px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ── Chart card ── */
+    .chart-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .avg-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ── Legend ── */
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left;
+      padding: 7px 10px;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-bottom: 0.5px solid var(--border-strong);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    td { padding: 7px 10px; border-bottom: 0.5px solid var(--border); color: var(--text-primary); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface-1); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .total-row td { font-weight: 500; background: var(--vv-burgundy-pale) !important; }
+
+    /* ── Budget section ── */
+    .budget-card {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .budget-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="dash">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Vista Vineyards — Harvest Labor · Packout</div>
+      <div class="hdr-sub" id="hdr-range">Load a CSV to begin</div>
+    </div>
+    <div class="hdr-right" id="hdr-ts">Operations Dashboard</div>
+  </div>
+
+  <!-- CSV Upload -->
+  <div class="upload-zone" style="display:none">
+    <div>
+      <label for="csv-input" style="display:block; margin-bottom:4px">Harvest Labor CSV export</label>
+      <div class="upload-status" id="csv-status">No file loaded — export from timekeeping system and upload here</div>
+    </div>
+    <label for="csv-input">
+      <span class="upload-btn">Choose CSV file</span>
+      <input type="file" id="csv-input" accept=".csv">
+    </label>
+    <div>
+      <label for="budget-input" style="display:block; margin-bottom:4px; font-size:13px; font-weight:500; color:var(--vv-moss);">Budget by variety (optional)</label>
+      <div class="upload-status" id="budget-status">2026 budget preloaded (17 varieties) — upload a new CSV to update</div>
+    </div>
+    <label for="budget-input">
+      <span class="upload-btn">Choose budget CSV</span>
+      <input type="file" id="budget-input" accept=".csv">
+    </label>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpi-row">
+    <div class="kpi kpi-b">
+      <div class="kpi-label">Total adj. gross pay</div>
+      <div class="kpi-val" id="kpi-pay">—</div>
+      <div class="kpi-sub" id="kpi-pay-sub">period total</div>
+    </div>
+    <div class="kpi kpi-b">
+      <div class="kpi-label">Total pieces</div>
+      <div class="kpi-val" id="kpi-pieces">—</div>
+      <div class="kpi-sub">period total</div>
+    </div>
+    <div class="kpi kpi-m">
+      <div class="kpi-label">Avg cost / piece</div>
+      <div class="kpi-val" id="kpi-cpp">—</div>
+      <div class="kpi-sub">YTD period avg</div>
+    </div>
+    <div class="kpi kpi-m">
+      <div class="kpi-label">Avg head count</div>
+      <div class="kpi-val" id="kpi-hc">—</div>
+      <div class="kpi-sub">workers per day</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <span class="ctrl-label">View by:</span>
+    <div class="toggle-group" id="view-group">
+      <button class="toggle-btn active" data-view="day">Day</button>
+      <button class="toggle-btn" data-view="crew">Crew</button>
+      <button class="toggle-btn" data-view="packstyle">Pack style</button>
+      <button class="toggle-btn" data-view="variety" id="variety-toggle" style="display:none">Variety</button>
+    </div>
+    <span class="ctrl-label" style="margin-left:6px">Metric:</span>
+    <div class="toggle-group" id="metric-group">
+      <button class="toggle-btn active" data-metric="cpp">Cost / piece</button>
+      <button class="toggle-btn" data-metric="pieces">Pieces</button>
+      <button class="toggle-btn" data-metric="pay">Gross pay</button>
+    </div>
+    <select id="location-filter"><option value="All">All locations</option></select>
+    <select id="employer-filter"><option value="All">All employers</option></select>
+  </div>
+
+  <!-- Main chart -->
+  <div class="chart-card">
+    <div class="card-title">
+      <span id="chart-title">Metric by dimension</span>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#3A1019cc"></div>Selected metric</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#504A1D; height:3px; margin-top:3px; border-radius:1px"></div>Period avg</div>
+    </div>
+    <div style="position:relative; width:100%; height:240px;">
+      <canvas id="mainChart" role="img" aria-label="Bar chart of selected harvest labor metric.">Harvest labor packout metrics for Vista Vineyards.</canvas>
+    </div>
+    <div class="avg-label" id="avg-label"></div>
+  </div>
+
+  <!-- Detail table -->
+  <div class="chart-card">
+    <div class="card-title">Detail table</div>
+    <div class="table-wrap">
+      <table id="detail-table">
+        <thead id="thead"><tr><th>Load a CSV file to see data</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Budget section -->
+  <div class="budget-card">
+    <div class="card-title">Budget vs. actual — by variety</div>
+    <div id="budget-content">
+      <div class="budget-empty">Upload a budget CSV (columns: Variety, Budget Cost/Piece) to see variance vs. the 2026 budget here.</div>
+    </div>
+  </div>
+
+  <div class="footer" id="footer">Vista Vineyards LLC · Harvest Labor Dashboard · v1.0</div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+// 2026 budget cost/piece by variety — baked in so Leslie doesn't have to
+// re-upload this every session. Uploading a new budget CSV will override it.
+const DEFAULT_BUDGET = [
+  { variety: 'Adora', 'budget cost/piece': '6.59' },
+  { variety: 'Midnight Beauty', 'budget cost/piece': '9.20' },
+  { variety: 'Sweet Sapphire', 'budget cost/piece': '6.75' },
+  { variety: 'Berry Snaps', 'budget cost/piece': '8.47' },
+  { variety: 'Candy Hearts', 'budget cost/piece': '8.47' },
+  { variety: 'Candy Snaps', 'budget cost/piece': '7.88' },
+  { variety: "Jack's Salute", 'budget cost/piece': '7.12' },
+  { variety: 'Scarlotta', 'budget cost/piece': '6.00' },
+  { variety: 'Ruby Rush', 'budget cost/piece': '6.82' },
+  { variety: 'Sugrafiftyseven', 'budget cost/piece': '8.50' },
+  { variety: 'Sweet Celebration', 'budget cost/piece': '7.77' },
+  { variety: 'Arra 15', 'budget cost/piece': '' },
+  { variety: 'Autumn Crisp', 'budget cost/piece': '6.00' },
+  { variety: 'Ivory', 'budget cost/piece': '6.91' },
+  { variety: 'Epic Crisp', 'budget cost/piece': '6.61' },
+  { variety: 'Honey Pop', 'budget cost/piece': '7.25' },
+  { variety: 'Sweet Globe', 'budget cost/piece': '6.52' },
+];
+let BUDGET = DEFAULT_BUDGET;
+let PAY_IS_ESTIMATED = true; // baked-in dataset was exported without an Adj Gross Pay column
+const DEFAULT_DATA = [{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP VISTA CARTON; HP VISTA STYRO","variety":"Honey Pops","hc":60,"cpp":7.48,"date":"06/18/2026","pay":10180.28,"pieces":1361},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA; HP VISTA STYRO","variety":"Honey Pops","hc":48,"cpp":2.04,"date":"06/18/2026","pay":8184.4800000000005,"pieces":4012},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS; HP VISTA STYRO","variety":"Honey Pops","hc":60,"cpp":1.77,"date":"06/18/2026","pay":10393.44,"pieces":5872},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.63,"date":"06/19/2026","pay":8156.5199999999995,"pieces":5004},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.64,"date":"06/19/2026","pay":8285.279999999999,"pieces":5052},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":1.65,"date":"06/22/2026","pay":11866.8,"pieces":7192},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":57,"cpp":1.67,"date":"06/22/2026","pay":11416.119999999999,"pieces":6836},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"HP VISTA CARTON","variety":"Candy Snaps","hc":60,"cpp":2.23,"date":"06/23/2026","pay":11658.44,"pieces":5228},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; HP 6/3# Costco USA","variety":"Candy Snaps","hc":55,"cpp":2.51,"date":"06/23/2026","pay":10612.279999999999,"pieces":4228},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; HP 6/3# Costco USA","variety":"Candy Snaps","hc":48,"cpp":9.38,"date":"06/23/2026","pay":9323.720000000001,"pieces":994},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 8,9","packStyle":"HP 6/3# SAMS; HP VISTA MXG","variety":"Honey Pops","hc":58,"cpp":1.61,"date":"06/23/2026","pay":11553.36,"pieces":7176},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":51,"cpp":1.77,"date":"06/23/2026","pay":10096.08,"pieces":5704},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# COSTCO TW; HP 6/3# Costco USA; HP 6/3# SAMS; HP VISTA MXG","variety":"Honey Pops","hc":59,"cpp":1.81,"date":"06/23/2026","pay":11699.84,"pieces":6464},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":56,"cpp":9.16,"date":"06/24/2026","pay":10891.24,"pieces":1189},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON; HP VISTA CARTON","variety":"Candy Snaps","hc":59,"cpp":8.31,"date":"06/24/2026","pay":11542.59,"pieces":1389},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":52,"cpp":8.57,"date":"06/24/2026","pay":10172.59,"pieces":1187},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7; 704 - 8,9","packStyle":"HP 6/3# COSTCO TW; HP 6/3# SAMS","variety":"Honey Pops","hc":60,"cpp":6.57,"date":"06/24/2026","pay":11983.68,"pieces":1824},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA","variety":"Honey Pops","hc":56,"cpp":6.78,"date":"06/24/2026","pay":11214.12,"pieces":1654},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# Costco USA; HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":9.03,"date":"06/24/2026","pay":11693.849999999999,"pieces":1295},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":62,"cpp":7.1,"date":"06/25/2026","pay":12318.5,"pieces":1735},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":52,"cpp":7.62,"date":"06/25/2026","pay":10294.62,"pieces":1351},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS NEON HARVEST STYRO","variety":"Candy Snaps","hc":55,"cpp":8.23,"date":"06/25/2026","pay":10756.61,"pieces":1307},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":60,"cpp":6.23,"date":"06/25/2026","pay":9064.650000000001,"pieces":1455},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 8,9","packStyle":"GREEN 6/3# WELCH; HP 6/3# Costco USA","variety":"Honey Pops","hc":55,"cpp":6.34,"date":"06/25/2026","pay":8318.08,"pieces":1312},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":59,"cpp":7.41,"date":"06/25/2026","pay":8773.44,"pieces":1184},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":48,"cpp":12.05,"date":"06/25/2026","pay":9097.75,"pieces":755},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":51,"cpp":11.82,"date":"06/25/2026","pay":9609.66,"pieces":813},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":63,"cpp":9.13,"date":"06/26/2026","pay":12215.94,"pieces":1338},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":61,"cpp":9.2,"date":"06/26/2026","pay":11527.599999999999,"pieces":1253},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":10.76,"date":"06/26/2026","pay":9996.039999999999,"pieces":929},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT; CS NEON HARVEST STYRO","variety":"Candy Snaps","hc":55,"cpp":8.69,"date":"06/26/2026","pay":10714.769999999999,"pieces":1233},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":53,"cpp":9.07,"date":"06/26/2026","pay":10312.59,"pieces":1137},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 6,7","packStyle":"HP 6/3# SAMS","variety":"Honey Pops","hc":56,"cpp":6.81,"date":"06/26/2026","pay":8362.68,"pieces":1228},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":45,"cpp":11.66,"date":"06/26/2026","pay":8605.08,"pieces":738},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":50,"cpp":9.82,"date":"06/26/2026","pay":9653.06,"pieces":983},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":64,"cpp":9.54,"date":"06/26/2026","pay":12029.939999999999,"pieces":1261},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"801 - 1,2,3n,7","packStyle":"MXG CLEAR GREEN","variety":"Jack's Salute","hc":7,"cpp":11.41,"date":"06/26/2026","pay":958.44,"pieces":84},{"employer":"Elite Agriculture Labor","crew":"MODESTO JIMENEZ","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":63,"cpp":6.75,"date":"06/29/2026","pay":12595.5,"pieces":1866},{"employer":"Dynasty Farm Labor Contracting","crew":"Uriana Urias","location":"410 - 1,2","packStyle":"CS NEON HARVEST CARTON","variety":"Candy Snaps","hc":61,"cpp":7.51,"date":"06/29/2026","pay":12038.529999999999,"pieces":1603},{"employer":"Greenview Farming Inc.","crew":"Ericka Caro","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":8.92,"date":"06/29/2026","pay":11069.72,"pieces":1241},{"employer":"Elite Agriculture Labor","crew":"Jesus Parra","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":59,"cpp":8.77,"date":"06/29/2026","pay":11418.539999999999,"pieces":1302},{"employer":"Avila Valley Crops","crew":"ANA GARCIA","location":"410 - 1,2","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":57,"cpp":9.45,"date":"06/29/2026","pay":10914.75,"pieces":1155},{"employer":"RAYA AG INC","crew":"Eloy Perez - 5","location":"704 - 1n","packStyle":"Generic RED CLEAR CARTON","variety":"Sugra57","hc":57,"cpp":8.83,"date":"06/29/2026","pay":11055.16,"pieces":1252},{"employer":"Legacy Ag. Inc.","crew":"AMADOR CUEVAS","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":50,"cpp":9.19,"date":"06/29/2026","pay":9704.64,"pieces":1056},{"employer":"Elite Agriculture Labor","crew":"MARIA HERRERA","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":53,"cpp":9.45,"date":"06/29/2026","pay":10243.8,"pieces":1084},{"employer":"Ag World Inc.","crew":"Cesar Ramos","location":"706 - 5","packStyle":"CS 6/3# NEON HARVEST CT","variety":"Candy Snaps","hc":67,"cpp":9.06,"date":"06/29/2026","pay":12964.86,"pieces":1431}];
+let DATA = DEFAULT_DATA;
+let currentView = 'day';
+let currentMetric = 'cpp';
+let chartInst = null;
+
+/* ─────────────────────────────────────────────
+   CSV PARSING — handles the timekeeping export
+   format: 1 metadata row, 1 header row,
+   1 summary row, blank rows, data rows
+───────────────────────────────────────────── */
+// Maps a lowercased header cell to a canonical field name. Header-driven so the
+// parser keeps working if PickTrace adds, removes, or reorders columns (e.g. Variety).
+function matchHarvestField(h) {
+  h = h.trim().toLowerCase();
+  if (h === 'employer') return 'employer';
+  if (h === 'crew') return 'crew';
+  if (h === 'location') return 'location';
+  if (h.includes('pack') && h.includes('style')) return 'packStyle';
+  if (h.includes('variety')) return 'variety';
+  if (h.includes('head') && h.includes('count')) return 'hc';
+  if ((h.includes('cost') && h.includes('piece')) || h === 'cpp') return 'cpp';
+  if (h === 'date') return 'date';
+  if (h.includes('gross') && h.includes('pay')) return 'pay';
+  if (h === 'pieces') return 'pieces';
+  return null;
+}
+
+function parseHarvestCSV(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const dataRows = [];
+  let colMap = null; // index -> canonical field name, built from whichever header row we find
+
+  for (const line of lines) {
+    const cols = parseCSVRow(line);
+
+    // detect a header row: must contain Employer + Crew, in any column order
+    const lowerCols = cols.map(c => c.trim().toLowerCase());
+    if (lowerCols.includes('employer') && lowerCols.includes('crew')) {
+      colMap = cols.map(matchHarvestField);
+      PAY_IS_ESTIMATED = !colMap.includes('pay');
+      continue;
+    }
+    if (!colMap) continue; // haven't seen a header row yet
+
+    const employerIdx = colMap.indexOf('employer');
+    const employer = (cols[employerIdx] || '').trim();
+    // skip summary/blank/repeated-header rows
+    if (!employer || employer === '{7}' || employer.toLowerCase() === 'employer') continue;
+
+    const hasPayCol = colMap.includes('pay');
+
+    const row = { employer, crew:'', location:'', packStyle:'', variety:'', hc:0, cpp:0, date:'', pay:0, pieces:0 };
+    colMap.forEach((field, i) => {
+      if (!field || field === 'employer') return;
+      const raw = (cols[i] || '').trim();
+      if (['hc','cpp','pay','pieces'].includes(field)) {
+        row[field] = parseFloat(raw) || 0;
+      } else {
+        row[field] = raw;
+      }
+    });
+
+    // some exports (e.g. PickTrace daily report) omit Adj Gross Pay — derive it
+    // from Cost per Piece × Pieces when that's all we have.
+    if (!hasPayCol && row.cpp && row.pieces) {
+      row.pay = row.cpp * row.pieces;
+    }
+
+    if (row.pay > 0 || row.pieces > 0) dataRows.push(row);
+  }
+  return dataRows;
+}
+
+// Does this dataset include a usable Variety column?
+function hasVarietyData() {
+  return DATA.some(r => r.variety && r.variety.trim());
+}
+
+function parseBudgetCSV(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    const cols = parseCSVRow(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (cols[i] || '').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+}
+
+function parseCSVRow(line) {
+  const result = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+/* ─────────────────────────────────────────────
+   FILE INPUTS
+───────────────────────────────────────────── */
+document.getElementById('csv-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    DATA = parseHarvestCSV(ev.target.result);
+    document.getElementById('csv-status').textContent = file.name + ' — ' + DATA.length + ' rows loaded';
+    document.getElementById('variety-toggle').style.display = hasVarietyData() ? '' : 'none';
+    if (currentView === 'variety' && !hasVarietyData()) {
+      currentView = 'day';
+      document.querySelectorAll('#view-group .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'day'));
+    }
+    populateFilters();
+    updateKPIs();
+    render();
+    renderBudget();
+    // update header
+    const dates = DATA.map(r => r.date).filter(Boolean).sort();
+    if (dates.length) {
+      document.getElementById('hdr-range').textContent = dates[0] + ' – ' + dates[dates.length-1];
+    }
+    document.getElementById('hdr-ts').textContent = 'Operations Dashboard\nLoaded ' + new Date().toLocaleDateString();
+    document.getElementById('footer').textContent = 'Vista Vineyards LLC · Harvest Labor Dashboard · ' + file.name;
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('budget-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    BUDGET = parseBudgetCSV(ev.target.result);
+    document.getElementById('budget-status').textContent = file.name + ' — ' + BUDGET.length + ' varieties';
+    renderBudget();
+  };
+  reader.readAsText(file);
+});
+
+/* ─────────────────────────────────────────────
+   FILTERS
+───────────────────────────────────────────── */
+function populateFilters() {
+  const locations = ['All', ...[...new Set(DATA.map(r => r.location))].sort()];
+  const employers = ['All', ...[...new Set(DATA.map(r => r.employer))].sort()];
+  const lf = document.getElementById('location-filter');
+  const ef = document.getElementById('employer-filter');
+  lf.innerHTML = locations.map(s => `<option value="${s}">${s}</option>`).join('');
+  ef.innerHTML = employers.map(e => `<option value="${e}">${e}</option>`).join('');
+}
+
+document.getElementById('location-filter').addEventListener('change', () => { updateKPIs(); render(); });
+document.getElementById('employer-filter').addEventListener('change', () => { updateKPIs(); render(); });
+
+function getFiltered() {
+  let d = DATA;
+  const location = document.getElementById('location-filter').value;
+  const employer = document.getElementById('employer-filter').value;
+  if (location !== 'All') d = d.filter(r => r.location === location);
+  if (employer !== 'All') d = d.filter(r => r.employer === employer);
+  return d;
+}
+
+/* ─────────────────────────────────────────────
+   TOGGLE BUTTONS
+───────────────────────────────────────────── */
+document.getElementById('view-group').addEventListener('click', e => {
+  const btn = e.target.closest('[data-view]');
+  if (!btn) return;
+  currentView = btn.dataset.view;
+  document.querySelectorAll('#view-group .toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+  render();
+});
+
+document.getElementById('metric-group').addEventListener('click', e => {
+  const btn = e.target.closest('[data-metric]');
+  if (!btn) return;
+  currentMetric = btn.dataset.metric;
+  document.querySelectorAll('#metric-group .toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+  render();
+});
+
+/* ─────────────────────────────────────────────
+   KPI UPDATE
+───────────────────────────────────────────── */
+function updateKPIs() {
+  const d = getFiltered();
+  if (!d.length) return;
+  const totPay = d.reduce((s,r)=>s+r.pay,0);
+  const totPieces = d.reduce((s,r)=>s+r.pieces,0);
+  const avgHC = d.reduce((s,r)=>s+r.hc,0) / d.length;
+  document.getElementById('kpi-pay').textContent = '$' + Math.round(totPay).toLocaleString();
+  document.getElementById('kpi-pay-sub').textContent = d.length + ' crew-days' + (PAY_IS_ESTIMATED ? ' (est. from cost/piece)' : '');
+  document.getElementById('kpi-pieces').textContent = Math.round(totPieces).toLocaleString();
+  document.getElementById('kpi-cpp').textContent = '$' + (totPay/totPieces).toFixed(2);
+  document.getElementById('kpi-hc').textContent = Math.round(avgHC);
+}
+
+/* ─────────────────────────────────────────────
+   GROUPING & METRIC HELPERS
+───────────────────────────────────────────── */
+function groupBy(data, field) {
+  const map = {};
+  data.forEach(r => {
+    const k = r[field];
+    if (!map[k]) map[k] = { totalPay:0, totalPieces:0, totalHC:0, count:0 };
+    map[k].totalPay += r.pay;
+    map[k].totalPieces += r.pieces;
+    map[k].totalHC += r.hc;
+    map[k].count++;
+  });
+  return map;
+}
+
+function metricVal(grp, m) {
+  if (m === 'cpp') return grp.totalPieces > 0 ? grp.totalPay / grp.totalPieces : 0;
+  if (m === 'pieces') return grp.totalPieces;
+  return grp.totalPay;
+}
+
+function metricLabel(m) {
+  return m === 'cpp' ? 'Cost / piece ($)' : m === 'pieces' ? 'Pieces' : 'Adj. gross pay ($)';
+}
+
+function fmtVal(v, m) {
+  if (m === 'cpp') return '$' + v.toFixed(2);
+  if (m === 'pieces') return Math.round(v).toLocaleString();
+  return '$' + Math.round(v).toLocaleString();
+}
+
+const PACK_SHORT = s => {
+  if (!s || s.length <= 22) return s;
+  const parts = s.split(';');
+  return parts[0].trim() + (parts.length > 1 ? ' +' + (parts.length-1) : '');
+};
+
+const keyField = () => currentView === 'day' ? 'date' : currentView === 'crew' ? 'crew' : currentView === 'variety' ? 'variety' : 'packStyle';
+
+/* ─────────────────────────────────────────────
+   RENDER — chart + table
+───────────────────────────────────────────── */
+function render() {
+  if (!DATA.length) return;
+  const data = getFiltered();
+  const grouped = groupBy(data, keyField());
+  const keys = Object.keys(grouped).sort();
+  const vals = keys.map(k => parseFloat(metricVal(grouped[k], currentMetric).toFixed(2)));
+  const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+
+  const viewLabel = {day:'by day', crew:'by crew', packstyle:'by pack style', variety:'by variety'}[currentView];
+  document.getElementById('chart-title').textContent = metricLabel(currentMetric) + ' ' + viewLabel;
+  document.getElementById('avg-label').textContent = 'Period avg: ' + fmtVal(avg, currentMetric);
+
+  const displayKeys = currentView === 'packstyle' ? keys.map(PACK_SHORT) : keys;
+
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? '#2c2c2a' : '#e1e0d9';
+  const tickColor = isDark ? '#898781' : '#898781';
+
+  if (chartInst) chartInst.destroy();
+
+  chartInst = new Chart(document.getElementById('mainChart'), {
+    type: 'bar',
+    data: {
+      labels: displayKeys,
+      datasets: [
+        {
+          label: metricLabel(currentMetric),
+          data: vals,
+          backgroundColor: 'rgba(58,16,25,0.8)',
+          borderColor: '#3A1019',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'Period avg',
+          data: keys.map(() => parseFloat(avg.toFixed(2))),
+          type: 'line',
+          borderColor: '#504A1D',
+          borderWidth: 2,
+          borderDash: [5,3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => fmtVal(ctx.parsed.y, currentMetric) }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { size: 10 }, maxRotation: 38, autoSkip: keys.length > 12 },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: {
+            color: tickColor,
+            font: { size: 10 },
+            callback: v => currentMetric === 'cpp' ? '$'+v.toFixed(2)
+                         : currentMetric === 'pay' ? '$'+Math.round(v/1000)+'k'
+                         : Math.round(v).toLocaleString()
+          },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+
+  renderTable(data, grouped, keys);
+}
+
+/* ─────────────────────────────────────────────
+   TABLE
+───────────────────────────────────────────── */
+function renderTable(data, grouped, keys) {
+  const kf = keyField();
+  const colLabel = currentView === 'day' ? 'Date' : currentView === 'crew' ? 'Crew' : currentView === 'variety' ? 'Variety' : 'Pack style';
+  const showLocation = currentView === 'day';
+
+  document.getElementById('thead').innerHTML = `<tr>
+    <th>${colLabel}</th>
+    ${showLocation ? '<th>Location(s)</th>' : ''}
+    <th class="num">Crew-days</th>
+    <th class="num">Head count</th>
+    <th class="num">Pieces</th>
+    <th class="num">Adj. gross pay</th>
+    <th class="num">Cost / piece</th>
+  </tr>`;
+
+  let rows = '';
+  keys.forEach(k => {
+    const g = grouped[k];
+    const cpp = g.totalPieces > 0 ? (g.totalPay/g.totalPieces).toFixed(2) : '—';
+    const rowData = data.filter(r => r[kf] === k);
+    const locations = [...new Set(rowData.map(r => r.location))].join(', ');
+    const label = currentView === 'packstyle' ? PACK_SHORT(k) : k;
+    const sub = currentView === 'crew'
+      ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">${[...new Set(rowData.map(r=>r.employer))].join(', ')}</div>`
+      : '';
+    rows += `<tr>
+      <td><span title="${k}">${label}</span>${sub}</td>
+      ${showLocation ? `<td>${locations}</td>` : ''}
+      <td class="num">${g.count}</td>
+      <td class="num">${Math.round(g.totalHC/g.count)}</td>
+      <td class="num">${g.totalPieces.toLocaleString()}</td>
+      <td class="num">$${Math.round(g.totalPay).toLocaleString()}</td>
+      <td class="num"><strong>$${cpp}</strong></td>
+    </tr>`;
+  });
+
+  // totals row
+  const totPay = data.reduce((s,r)=>s+r.pay,0);
+  const totPieces = data.reduce((s,r)=>s+r.pieces,0);
+  const totHC = data.reduce((s,r)=>s+r.hc,0);
+  rows += `<tr class="total-row">
+    <td>Total / avg</td>
+    ${showLocation ? '<td></td>' : ''}
+    <td class="num">${data.length}</td>
+    <td class="num">${Math.round(totHC/data.length)}</td>
+    <td class="num">${totPieces.toLocaleString()}</td>
+    <td class="num">$${Math.round(totPay).toLocaleString()}</td>
+    <td class="num"><strong>$${(totPay/totPieces).toFixed(2)}</strong></td>
+  </tr>`;
+
+  document.getElementById('tbody').innerHTML = rows;
+}
+
+/* ─────────────────────────────────────────────
+   BUDGET SECTION
+───────────────────────────────────────────── */
+// PickTrace exports and the budget-by-variety file don't always use identical
+// names (e.g. "Honey Pops" vs "Honey Pop", "Sugra57" vs "Sugrafiftyseven").
+// Normalize aggressively (strip spaces/punctuation, drop trailing "s") and
+// apply known aliases so the variance table still matches correctly.
+const VARIETY_ALIASES = {
+  'sugra57': 'sugrafiftyseven',
+  'sugra fiftyseven': 'sugrafiftyseven',
+};
+function normalizeVariety(v) {
+  let s = (v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (VARIETY_ALIASES[s]) s = VARIETY_ALIASES[s];
+  if (s.endsWith('s') && s.length > 3) s = s.slice(0, -1); // crude depluralize
+  return s;
+}
+
+function renderBudget() {
+  if (!BUDGET.length) return;
+  const container = document.getElementById('budget-content');
+  if (!DATA.length) {
+    container.innerHTML = '<div class="budget-empty">Load harvest CSV first to compare against budget.</div>';
+    return;
+  }
+
+  // detect columns (flexible naming)
+  const sample = BUDGET[0];
+  const varietyKey = Object.keys(sample).find(k => k.toLowerCase().includes('variety'));
+  const budCppKey = Object.keys(sample).find(k => k.toLowerCase().includes('budget') && (k.toLowerCase().includes('piece') || k.toLowerCase().includes('cpp')));
+
+  if (!varietyKey) {
+    container.innerHTML = '<div class="budget-empty">Could not detect a Variety column in the budget file. Expected a column header containing "variety".</div>';
+    return;
+  }
+
+  if (!hasVarietyData()) {
+    container.innerHTML = '<div class="budget-empty">The loaded harvest CSV doesn\'t have a Variety column yet, so budget comparison can\'t be matched precisely. Once PickTrace exports include Variety, this section will compare exact matches automatically.</div>';
+    return;
+  }
+
+  // group actual by exact variety
+  const actGrp = groupBy(DATA, 'variety');
+
+  let rows = '';
+  BUDGET.forEach(b => {
+    const variety = b[varietyKey];
+    if (!variety) return;
+    const budCpp = budCppKey ? parseFloat(b[budCppKey]) : null;
+    // exact match (case-insensitive) against actual variety field
+    const matchKey = Object.keys(actGrp).find(k => normalizeVariety(k) === normalizeVariety(variety));
+    const actual = matchKey ? actGrp[matchKey] : null;
+    const actCpp = actual ? (actual.totalPay / actual.totalPieces) : null;
+    const variance = (budCpp && actCpp) ? (actCpp - budCpp) : null;
+    const varStyle = variance === null ? '' : variance > 0 ? 'color:#a32d2d;font-weight:500' : 'color:#3b6d11;font-weight:500';
+    const varStr = variance === null ? '—' : (variance > 0 ? '+' : '') + '$' + variance.toFixed(2);
+    rows += `<tr>
+      <td>${variety}</td>
+      <td class="num">${budCpp != null && !isNaN(budCpp) ? '$'+budCpp.toFixed(2) : '—'}</td>
+      <td class="num">${actCpp != null ? '$'+actCpp.toFixed(2) : 'No match'}</td>
+      <td class="num" style="${varStyle}">${varStr}</td>
+    </tr>`;
+  });
+
+  container.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Variety</th>
+        <th class="num">2026 budget cost/piece</th>
+        <th class="num">Actual cost/piece</th>
+        <th class="num">Variance</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* ─────────────────────────────────────────────
+   INIT — this build ships with data baked in and
+   the upload zone hidden, so render on page load.
+───────────────────────────────────────────── */
+(function init() {
+  populateFilters();
+  updateKPIs();
+  render();
+  renderBudget();
+  const dates = DATA.map(r => r.date).filter(Boolean).sort();
+  if (dates.length) {
+    document.getElementById('hdr-range').textContent = dates[0] + ' – ' + dates[dates.length-1];
+  }
+  document.getElementById('hdr-ts').textContent = 'Operations Dashboard';
+  document.getElementById('footer').textContent = 'Vista Vineyards LLC · Harvest Labor Dashboard';
+})();
+</script>
+</body>
+</html>
