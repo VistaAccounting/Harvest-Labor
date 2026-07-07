@@ -366,24 +366,25 @@
 ───────────────────────────────────────────── */
 // 2026 budget cost/piece by variety — baked in so Leslie doesn't have to
 // re-upload this every session. Uploading a new budget CSV will override it.
+// 2025 FCST = prior year forecast, used as prior year comparison.
 const DEFAULT_BUDGET = [
-  { variety: 'Adora', 'budget cost/piece': '6.59' },
-  { variety: 'Midnight Beauty', 'budget cost/piece': '9.20' },
-  { variety: 'Sweet Sapphire', 'budget cost/piece': '6.75' },
-  { variety: 'Berry Snaps', 'budget cost/piece': '8.47' },
-  { variety: 'Candy Hearts', 'budget cost/piece': '8.47' },
-  { variety: 'Candy Snaps', 'budget cost/piece': '7.88' },
-  { variety: "Jack's Salute", 'budget cost/piece': '7.12' },
-  { variety: 'Scarlotta', 'budget cost/piece': '6.00' },
-  { variety: 'Ruby Rush', 'budget cost/piece': '6.82' },
-  { variety: 'Sugrafiftyseven', 'budget cost/piece': '8.50' },
-  { variety: 'Sweet Celebration', 'budget cost/piece': '7.77' },
-  { variety: 'Arra 15', 'budget cost/piece': '' },
-  { variety: 'Autumn Crisp', 'budget cost/piece': '6.00' },
-  { variety: 'Ivory', 'budget cost/piece': '6.91' },
-  { variety: 'Epic Crisp', 'budget cost/piece': '6.61' },
-  { variety: 'Honey Pop', 'budget cost/piece': '7.25' },
-  { variety: 'Sweet Globe', 'budget cost/piece': '6.52' },
+  { variety: 'Adora',            'budget cost/piece': '6.59', 'prior year': '6.40' },
+  { variety: 'Midnight Beauty',  'budget cost/piece': '9.20', 'prior year': '9.01' },
+  { variety: 'Sweet Sapphire',   'budget cost/piece': '6.75', 'prior year': '6.05' },
+  { variety: 'Berry Snaps',      'budget cost/piece': '8.47', 'prior year': ''     },
+  { variety: 'Candy Hearts',     'budget cost/piece': '8.47', 'prior year': '7.98' },
+  { variety: 'Candy Snaps',      'budget cost/piece': '7.88', 'prior year': '7.65' },
+  { variety: "Jack's Salute",    'budget cost/piece': '7.12', 'prior year': '6.92' },
+  { variety: 'Scarlotta',        'budget cost/piece': '6.00', 'prior year': '5.75' },
+  { variety: 'Ruby Rush',        'budget cost/piece': '6.82', 'prior year': '6.62' },
+  { variety: 'Sugrafiftyseven',  'budget cost/piece': '8.50', 'prior year': '10.51'},
+  { variety: 'Sweet Celebration','budget cost/piece': '7.77', 'prior year': '7.54' },
+  { variety: 'Arra 15',          'budget cost/piece': '',     'prior year': '5.23' },
+  { variety: 'Autumn Crisp',     'budget cost/piece': '6.00', 'prior year': '5.51' },
+  { variety: 'Ivory',            'budget cost/piece': '6.91', 'prior year': '6.71' },
+  { variety: 'Epic Crisp',       'budget cost/piece': '6.61', 'prior year': '6.40' },
+  { variety: 'Honey Pop',        'budget cost/piece': '7.25', 'prior year': '7.17' },
+  { variety: 'Sweet Globe',      'budget cost/piece': '6.52', 'prior year': '6.33' },
 ];
 let BUDGET = DEFAULT_BUDGET;
 let PAY_IS_ESTIMATED = false;
@@ -950,23 +951,33 @@ function renderBudget() {
   // group actual by exact variety
   const actGrp = groupBy(DATA, 'variety');
 
+  // detect prior year key (flexible naming)
+  const priorKey = Object.keys(BUDGET[0] || {}).find(k =>
+    k.toLowerCase().includes('prior') || k.toLowerCase().includes('2025'));
+
   let rows = '';
   BUDGET.forEach(b => {
     const variety = b[varietyKey];
     if (!variety) return;
-    const budCpp = budCppKey ? parseFloat(b[budCppKey]) : null;
-    // exact match (case-insensitive) against actual variety field
+    const budCpp   = budCppKey ? parseFloat(b[budCppKey]) : null;
+    const priorCpp = priorKey  ? parseFloat(b[priorKey])  : null;
     const matchKey = Object.keys(actGrp).find(k => normalizeVariety(k) === normalizeVariety(variety));
-    const actual = matchKey ? actGrp[matchKey] : null;
-    const actCpp = actual ? (actual.totalPay / actual.totalPieces) : null;
-    const variance = (budCpp && actCpp) ? (actCpp - budCpp) : null;
-    const varStyle = variance === null ? '' : variance > 0 ? 'color:#a32d2d;font-weight:500' : 'color:#3b6d11;font-weight:500';
-    const varStr = variance === null ? '—' : (variance > 0 ? '+' : '') + '$' + variance.toFixed(2);
+    const actual   = matchKey ? actGrp[matchKey] : null;
+    const actCpp   = actual ? (actual.totalPay / actual.totalPieces) : null;
+
+    const variance  = (budCpp  && actCpp) ? (actCpp - budCpp)   : null;
+    const varPrior  = (priorCpp && actCpp) ? (actCpp - priorCpp) : null;
+
+    const varStyle = v => v === null ? '' : v > 0 ? 'color:#a32d2d;font-weight:500' : 'color:#3b6d11;font-weight:500';
+    const varStr   = v => v === null ? '—' : (v > 0 ? '+' : '') + '$' + v.toFixed(2);
+
     rows += `<tr>
       <td>${variety}</td>
-      <td class="num">${budCpp != null && !isNaN(budCpp) ? '$'+budCpp.toFixed(2) : '—'}</td>
-      <td class="num">${actCpp != null ? '$'+actCpp.toFixed(2) : 'No match'}</td>
-      <td class="num" style="${varStyle}">${varStr}</td>
+      <td class="num">${budCpp  != null && !isNaN(budCpp)  ? '$'+budCpp.toFixed(2)  : '—'}</td>
+      <td class="num">${priorCpp != null && !isNaN(priorCpp) ? '$'+priorCpp.toFixed(2) : '—'}</td>
+      <td class="num">${actCpp  != null ? '$'+actCpp.toFixed(2) : 'No data'}</td>
+      <td class="num" style="${varStyle(variance)}">${varStr(variance)}</td>
+      <td class="num" style="${varStyle(varPrior)}">${varStr(varPrior)}</td>
     </tr>`;
   });
 
@@ -974,9 +985,11 @@ function renderBudget() {
     <table>
       <thead><tr>
         <th>Variety</th>
-        <th class="num">2026 budget cost/piece</th>
+        <th class="num">2026 Budget</th>
+        <th class="num">2025 FCST (Prior Yr)</th>
         <th class="num">Actual cost/piece</th>
-        <th class="num">Variance</th>
+        <th class="num">vs. Budget</th>
+        <th class="num">vs. Prior Year</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
