@@ -726,8 +726,8 @@ function groupBy(data, field, dayKeyFn) {
 }
 
 // Sort keys for day view: week labels before individual dates, all in chron order
-function sortDayKeys(keys) {
-  const dir = dateOrderDesc ? -1 : 1;
+function sortDayKeys(keys, forceAsc) {
+  const dir = forceAsc ? 1 : (dateOrderDesc ? -1 : 1);
   return keys.sort((a, b) => {
     // both weeks or both dates — compare chronologically by parsing
     const toSortDate = s => {
@@ -773,15 +773,20 @@ function render() {
   const data = getFiltered();
   const dayKeyFn = currentView === 'day' ? buildDayKeyFn(data) : null;
   const grouped = groupBy(data, keyField(), dayKeyFn);
-  const keys = currentView === 'day' ? sortDayKeys(Object.keys(grouped)) : Object.keys(grouped).sort();
-  const vals = keys.map(k => parseFloat(metricVal(grouped[k], currentMetric).toFixed(2)));
+  const groupKeys = Object.keys(grouped);
+  // Chart always reads left-to-right oldest→newest, independent of the
+  // Detail Table / Daily Crew Detail order toggle below.
+  const chartKeys = currentView === 'day' ? sortDayKeys([...groupKeys], true) : [...groupKeys].sort();
+  // Table respects the newest-first/oldest-first toggle.
+  const keys = currentView === 'day' ? sortDayKeys([...groupKeys], false) : [...groupKeys].sort();
+  const vals = chartKeys.map(k => parseFloat(metricVal(grouped[k], currentMetric).toFixed(2)));
   const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
 
   const viewLabel = {day:'by day', crew:'by crew', packsize:'by pack size', variety:'by variety'}[currentView];
   document.getElementById('chart-title').textContent = metricLabel(currentMetric) + ' ' + viewLabel;
   document.getElementById('avg-label').textContent = 'Period avg: ' + fmtVal(avg, currentMetric);
 
-  const displayKeys = currentView === 'packsize' ? keys.map(SIZE_SHORT) : keys;
+  const displayKeys = currentView === 'packsize' ? chartKeys.map(SIZE_SHORT) : chartKeys;
 
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
   const gridColor = isDark ? '#2c2c2a' : '#e1e0d9';
@@ -804,7 +809,7 @@ function render() {
         },
         {
           label: 'Period avg',
-          data: keys.map(() => parseFloat(avg.toFixed(2))),
+          data: chartKeys.map(() => parseFloat(avg.toFixed(2))),
           type: 'line',
           borderColor: '#504A1D',
           borderWidth: 2,
@@ -826,7 +831,7 @@ function render() {
       },
       scales: {
         x: {
-          ticks: { color: tickColor, font: { size: 10 }, maxRotation: 38, autoSkip: keys.length > 12 },
+          ticks: { color: tickColor, font: { size: 10 }, maxRotation: 38, autoSkip: chartKeys.length > 12 },
           grid: { color: gridColor }
         },
         y: {
