@@ -293,7 +293,7 @@
   <!-- Budget vs actual -->
   <div class="budget-card">
     <div class="card-title">
-      <span>Budget vs. actual — season to date, by variety &amp; ranch</span>
+      <span>Budget vs. actual — season to date, by variety</span>
     </div>
     <div id="budget-content"><div class="budget-empty">Loading…</div></div>
   </div>
@@ -786,45 +786,57 @@ function renderCrewDetail() {
 
 /* =====================================================================
    RENDER — Budget vs actual
+   Simplified to a per-variety view (2026 Budget, prior-year FCST, actual,
+   and both variances) rather than the fuller variety+ranch breakdown —
+   prior-year figures aren't in vista_budget_reference.csv, so they're
+   embedded here from the same source Leslie's earlier dashboard used.
+   This table always reflects the full season regardless of the Ranch/
+   Employer/Variety filters above, since budget and prior-year benchmarks
+   are set at the variety level, not per-ranch or per-filter.
    ===================================================================== */
+const PRIOR_YEAR_CPP = {
+  'Adora': 6.40, 'Midnight Beauty': 9.01, 'Sweet Sapphire': 6.05, 'Berry Snaps': null,
+  'Candy Hearts': 7.98, 'Candy Snaps': 7.65, "Jack's Salute": 6.92, 'Scarlotta': 5.75,
+  'Ruby Rush': 6.62, 'Sugrafiftyseven': 10.51, 'Sweet Celebration': 7.54, 'Autumn Crisp': 5.51,
+  'Ivory': 6.71, 'Epic Crisp': 6.40, 'Honey Pop': 7.17, 'Sweet Globe': 6.33,
+};
+function budgetCppByVariety() {
+  const map = new Map();
+  for (const b of BUDGET) { if (b.budgetCpp != null && !map.has(b.variety)) map.set(b.variety, b.budgetCpp); }
+  return map;
+}
 function renderBudget() {
   const container = document.getElementById('budget-content');
   if (!DATA.length) { container.innerHTML = '<div class="budget-empty">Load a harvest CSV first to compare against budget.</div>'; return; }
-  const ranch = document.getElementById('ranch-filter').value;
-  const variety = document.getElementById('variety-filter').value;
-  const scoped = DATA.filter(r => (ranch === 'All' || r.ranch === ranch) && (variety === 'All' || r.variety === variety));
-  const { rows: bc } = budgetComparison(scoped, BUDGET);
-  const header = ['Variety', 'Ranch', 'Acres', 'Season boxes', 'Actual bx/acre', 'Budget bx/acre', 'Actual $/box', 'Budget $/box', 'vs. budget $/box', 'YTD budget boxes', 'vs. budget boxes', 'Full-year budget', '% of full-year'];
+
+  const actualByVariety = new Map();
+  for (const r of DATA) {
+    if (!actualByVariety.has(r.variety)) actualByVariety.set(r.variety, { pieces: 0, pay: 0 });
+    const a = actualByVariety.get(r.variety);
+    a.pieces += r.pieces; a.pay += r.pay;
+  }
+  const budgetMap = budgetCppByVariety();
+  const allVarieties = Array.from(new Set([...budgetMap.keys(), ...actualByVariety.keys()])).sort();
+
+  const header = ['Variety', '2026 Budget', '2025 FCST (Prior Yr)', 'Actual Cost/Piece', 'vs. Budget', 'vs. Prior Year'];
   let rows = '';
-  let totBoxes = 0, totYtdBudget = 0, totFullYear = 0;
-  for (const r of bc) {
-    if (!r.hasBudget && r.seasonBoxes === 0) continue;
-    totBoxes += r.seasonBoxes;
-    if (r.ytdBudgetBoxes) totYtdBudget += r.ytdBudgetBoxes;
-    if (r.fyBudget) totFullYear += r.fyBudget;
+  for (const variety of allVarieties) {
+    const budCpp = budgetMap.has(variety) ? budgetMap.get(variety) : null;
+    const priorCpp = (variety in PRIOR_YEAR_CPP && PRIOR_YEAR_CPP[variety] != null) ? PRIOR_YEAR_CPP[variety] : null;
+    const a = actualByVariety.get(variety);
+    const actCpp = (a && a.pieces) ? a.pay / a.pieces : null;
+    const variance = (budCpp != null && actCpp != null) ? actCpp - budCpp : null;
+    const varPrior = (priorCpp != null && actCpp != null) ? actCpp - priorCpp : null;
     rows += `<tr>
-      <td>${esc(r.variety)}</td><td>${esc(r.ranch)}</td>
-      <td class="num">${r.acres != null ? r.acres.toFixed(1) : '—'}</td>
-      <td class="num">${num(r.seasonBoxes)}</td>
-      <td class="num">${r.actualBxAcre != null ? r.actualBxAcre.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}</td>
-      <td class="num">${r.budgetBxAcre != null ? r.budgetBxAcre.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '—'}</td>
-      <td class="num">${r.actualCpp != null ? money(r.actualCpp, true) : '—'}</td>
-      <td class="num">${r.budgetCpp != null ? money(r.budgetCpp, true) : '—'}</td>
-      <td class="num">${spanCost(dollarVar(r.cppVariance), r.cppVariance)}</td>
-      <td class="num">${r.ytdBudgetBoxes != null ? num(r.ytdBudgetBoxes) : 'No budget yet'}</td>
-      <td class="num">${spanYield(pctVar(r.vsBudgetPct), r.vsBudgetPct)}</td>
-      <td class="num">${r.fyBudget != null ? num(r.fyBudget) : 'No budget'}</td>
-      <td class="num">${r.pctFullYear != null ? (r.pctFullYear * 100).toFixed(0) + '%' : '—'}</td>
+      <td>${esc(variety)}</td>
+      <td class="num">${budCpp != null ? money(budCpp, true) : '—'}</td>
+      <td class="num">${priorCpp != null ? money(priorCpp, true) : '—'}</td>
+      <td class="num">${actCpp != null ? money(actCpp, true) : 'No data'}</td>
+      <td class="num">${spanCost(dollarVar(variance), variance)}</td>
+      <td class="num">${spanCost(dollarVar(varPrior), varPrior)}</td>
     </tr>`;
   }
-  const vsBudgetTotal = totYtdBudget ? (totBoxes - totYtdBudget) / totYtdBudget : null;
-  const pctFyTotal = totFullYear ? totBoxes / totFullYear : null;
-  rows += `<tr class="total-row">
-    <td>TOTAL</td><td></td><td></td><td class="num">${num(totBoxes)}</td><td></td><td></td><td></td><td></td><td></td>
-    <td class="num">${num(totYtdBudget)}</td><td class="num">${spanYield(pctVar(vsBudgetTotal), vsBudgetTotal)}</td>
-    <td class="num">${num(totFullYear)}</td><td class="num">${pctFyTotal != null ? (pctFyTotal * 100).toFixed(0) + '%' : '—'}</td>
-  </tr>`;
-  container.innerHTML = `<div class="table-wrap"><table><thead><tr>${header.map((h,i)=>`<th${i>1?' class="num"':''}>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  container.innerHTML = `<div class="table-wrap"><table><thead><tr>${header.map((h,i)=>`<th${i>0?' class="num"':''}>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* =====================================================================
